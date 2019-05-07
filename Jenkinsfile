@@ -1,40 +1,29 @@
 pipeline {
-    agent none
+    agent any
     stages {
         stage('Build') {
-            agent any
             steps {
-                checkout scm
-                sh 'make'
-                stash includes: '**/target/*.jar', name: 'app' 
+                sh 'make' 
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
             }
         }
-        stage('Test on Linux') {
-            agent { 
-                label 'linux'
-            }
+        stage('Test') {
             steps {
-                unstash 'app' 
-                sh 'make check'
-            }
-            post {
-                always {
-                    junit '**/target/*.xml'
-                }
+                /* `make check` returns non-zero on test failures,
+                * using `true` to allow the Pipeline to continue nonetheless
+                */
+                sh 'make check || true' 
+                junit '**/target/*.xml'
             }
         }
-        stage('Test on Windows') {
-            agent {
-                label 'windows'
+        stage('Deploy') {
+            when {
+              expression {
+                currentBuild.result == null || currentBuild.result == 'SUCCESS' 
+              }
             }
             steps {
-                unstash 'app'
-                bat 'make check' 
-            }
-            post {
-                always {
-                    junit '**/target/*.xml'
-                }
+                sh 'make publish'
             }
         }
     }
