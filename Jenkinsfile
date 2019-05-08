@@ -20,7 +20,7 @@ pipeline {
       steps {
         dir('multirepo') {
           dir('repo2') {
-            git(url: 'https://github.com/pockethub/PocketHub.git', branch: 'master')
+            git(url: 'https://github.com/twilio/mobile-sdk-sample-android.git', branch: 'master')
           }
         }
         sh 'echo "SUCCESS AT REPO2"'
